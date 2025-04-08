@@ -53,6 +53,20 @@ export interface InvestigatorSummary {
   code: string;
   name: string;
   faction_code: string;
+  faction_name: string;
+  pack_code: string;
+  pack_name: string;
+  type_code: string;
+  type_name: string;
+  imagesrc?: string;
+  traits?: string;
+  text?: string;
+}
+
+export interface InvestigatorSummary {
+  code: string;
+  name: string;
+  faction_code: string;
   type_code: string;
   imagesrc?: string;
 }

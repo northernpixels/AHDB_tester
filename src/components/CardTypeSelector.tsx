@@ -5,12 +5,14 @@ import { ArkhamCard, CardTypeGroup } from "@/types/arkham-types";
 import { fetchCardsByFaction, getFactionName, getTypeIcon } from "@/api/arkhamAPI";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoadingSpinner from "./LoadingSpinner";
 
 const CardTypeSelector: React.FC = () => {
   const [cardGroups, setCardGroups] = useState<CardTypeGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"grid" | "list">("grid");
   const { faction, investigator } = useParams<{ faction: string; investigator: string }>();
   const navigate = useNavigate();
 
@@ -71,14 +73,19 @@ const CardTypeSelector: React.FC = () => {
         <h2 className="text-3xl font-bold text-arkham-purple">
           {faction ? `${getFactionName(faction)} Card Types` : "All Card Types"}
         </h2>
-        <div className="w-24"></div> {/* Empty div for flex spacing */}
+        <Tabs value={view} onValueChange={(v) => setView(v as "grid" | "list")}>
+          <TabsList>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
+            <TabsTrigger value="list">List</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cardGroups.length === 0 ? (
-          <p className="text-center col-span-full">No card types found for this faction.</p>
-        ) : (
-          cardGroups.map((group) => (
+      {cardGroups.length === 0 ? (
+        <p className="text-center">No card types found for this faction.</p>
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cardGroups.map((group) => (
             <Card 
               key={group.type_code} 
               className="card-hover cursor-pointer bg-card"
@@ -90,9 +97,27 @@ const CardTypeSelector: React.FC = () => {
                 <p className="text-muted-foreground">{group.cards.length} cards</p>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {cardGroups.map((group) => (
+            <Card 
+              key={group.type_code} 
+              className="card-hover cursor-pointer bg-card"
+              onClick={() => handleSelectCardType(group.type_code)}
+            >
+              <CardContent className="p-4 flex flex-row items-center gap-6">
+                <div className="text-4xl">{getTypeIcon(group.type_code)}</div>
+                <div>
+                  <h3 className="text-xl font-bold">{group.type_name}</h3>
+                  <p className="text-muted-foreground">{group.cards.length} cards</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
