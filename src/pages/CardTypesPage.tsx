@@ -1,6 +1,6 @@
 
 import React from "react";
-import CardTypeSelector from "@/components/CardTypeSelector";
+import CardTypeList from "@/components/CardTypeList";
 
 const CardTypesPage: React.FC = () => {
   return (
@@ -13,7 +13,7 @@ const CardTypesPage: React.FC = () => {
       </header>
 
       <main className="flex-grow py-8">
-        <CardTypeSelector />
+        <CardTypeList />
       </main>
 
       <footer className="bg-arkham-black p-4 mt-12 text-center text-gray-400">

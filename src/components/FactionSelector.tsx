@@ -4,6 +4,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getFactionName, getFactionColor } from "@/api/arkhamAPI";
 import { useNavigate } from "react-router-dom";
 
+// Import faction logos
+import guardianLogo from "@/assets/guardian.svg";
+import seekerLogo from "@/assets/seeker.svg";
+import rogueLogo from "@/assets/rogue.svg";
+import mysticLogo from "@/assets/mystic.svg";
+import survivorLogo from "@/assets/survivor.svg";
+import neutralLogo from "@/assets/neutral.svg";
+
+const factionLogos: Record<string, string> = {
+  guardian: guardianLogo,
+  seeker: seekerLogo,
+  rogue: rogueLogo,
+  mystic: mysticLogo,
+  survivor: survivorLogo,
+  neutral: neutralLogo,
+};
+
 // Placeholder for faction data
 const factions = [
   "guardian",
@@ -18,7 +35,7 @@ const FactionSelector: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelectFaction = (faction: string) => {
-    navigate(`/investigators/${faction}`);
+    navigate(`/cards/${faction}`);
   };
   
   return (
@@ -32,7 +49,15 @@ const FactionSelector: React.FC = () => {
             onClick={() => handleSelectFaction(faction)}
           >
             <CardContent className="flex flex-col items-center justify-center p-6">
-              <h3 className="text-2xl font-bold mb-2 text-white">{getFactionName(faction)}</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <img
+                  src={factionLogos[faction]}
+                  alt={`${getFactionName(faction)} icon`}
+                  className="w-8 h-8 text-white"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
+                <h3 className="text-2xl font-bold text-white">{getFactionName(faction)}</h3>
+              </div>
               <p className="text-white opacity-80 text-center">
                 {getClassDescription(faction)}
               </p>

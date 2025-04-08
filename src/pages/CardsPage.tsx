@@ -3,6 +3,7 @@ import React from "react";
 import CardList from "@/components/CardList";
 
 const CardsPage: React.FC = () => {
+  console.log('CardsPage rendering');
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-arkham-black p-6">
