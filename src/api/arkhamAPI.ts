@@ -19,21 +19,16 @@ export const fetchAllCards = async (): Promise<ArkhamCard[]> => {
   }
 };
 
-export const fetchInvestigators = async (): Promise<InvestigatorSummary[]> => {
+export const fetchInvestigators = async (): Promise<ArkhamCard[]> => {
   try {
     const allCards = await fetchAllCards();
     return allCards
       .filter(card => card.type_code === 'investigator')
       .map(investigator => ({
-        code: investigator.code,
-        name: investigator.name,
-        faction_code: investigator.faction_code,
+        ...investigator,
         faction_name: investigator.faction_name || '',
-        pack_code: investigator.pack_code || '',
         pack_name: investigator.pack_name || '',
-        type_code: investigator.type_code,
         type_name: investigator.type_name || '',
-        imagesrc: investigator.imagesrc,
       }));
   } catch (error) {
     console.error("Error fetching investigators:", error);
@@ -54,69 +49,31 @@ export const fetchCardsByFaction = async (factionCode: string): Promise<ArkhamCa
   }
 };
 
-export interface ExpansionGroup {
-  cycleCode: string;
-  cycleName: string;
-  packs: {
-    code: string;
-    name: string;
-  }[];
+export interface Expansion {
+  name: string;
+  code: string;
 }
 
-export const getExpansions = async (): Promise<ExpansionGroup[]> => {
+export const getExpansions = async (): Promise<Expansion[]> => {
   try {
     console.log('Fetching expansions...');
-    const allCards = await fetchAllCards();
-    const packMap = new Map<string, Set<string>>();
+    const response = await fetch(`${baseUrl}/packs/`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status} - ${response.statusText}`);
+    }
+    const packs = await response.json();
     
-    // Group packs by their first two characters (cycle code)
-    allCards.forEach(card => {
-      if (!card) {
-        console.warn('Found null card in allCards');
-        return;
-      }
-      
-      try {
-        if (card.pack_code && card.pack_name) {
-          const cycleCode = card.pack_code.slice(0, 2);
-          if (!packMap.has(cycleCode)) {
-            packMap.set(cycleCode, new Set());
-          }
-          const packData = { code: card.pack_code, name: card.pack_name };
-          packMap.get(cycleCode)?.add(JSON.stringify(packData));
-        }
-      } catch (err) {
-        console.warn('Error processing card for expansions:', err);
-      }
-    });
-
-    console.log('Processing expansion groups...');
     // Convert to array and sort
-    const expansionGroups: ExpansionGroup[] = Array.from(packMap.entries()).map(([cycleCode, packSet]) => {
-      try {
-        return {
-          cycleCode,
-          cycleName: getCycleName(cycleCode),
-          packs: Array.from(packSet)
-            .map(packStr => {
-              try {
-                return JSON.parse(packStr);
-              } catch (err) {
-                console.warn('Error parsing pack JSON:', err);
-                return null;
-              }
-            })
-            .filter((pack): pack is { code: string; name: string } => pack !== null)
-            .sort((a, b) => a.name.localeCompare(b.name))
-        };
-      } catch (err) {
-        console.error('Error creating expansion group:', err);
-        return null;
-      }
-    }).filter((group): group is ExpansionGroup => group !== null);
+    const expansions = packs
+      .filter((pack: any) => pack.name) // Filter out any packs without names
+      .map((pack: any) => ({
+        name: pack.name,
+        code: pack.code
+      }));
+    expansions.sort((a, b) => a.name.localeCompare(b.name));
 
-    console.log('Returning expansion groups:', expansionGroups);
-    return expansionGroups;
+    console.log('Returning expansions:', expansions);
+    return expansions;
   } catch (error) {
     console.error('Error getting expansions:', error);
     throw new Error(`Failed to get expansions: ${error instanceof Error ? error.message : 'Unknown error'}`);
