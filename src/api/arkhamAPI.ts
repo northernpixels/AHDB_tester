@@ -36,11 +36,83 @@ export const fetchInvestigators = async (): Promise<ArkhamCard[]> => {
   }
 };
 
+// Map ArkhamDB pack names to our expansion names
+const PACK_NAME_MAP: { [key: string]: string } = {
+  // Core Set variations
+  'Core Set': 'Revised Core Set',
+  'Revised Core': 'Revised Core Set',
+  'Revised Core Set': 'Revised Core Set',
+  
+  // Dunwich Legacy variations
+  'Dunwich': 'The Dunwich Legacy',
+  'Dunwich Legacy': 'The Dunwich Legacy',
+  'The Dunwich Legacy': 'The Dunwich Legacy',
+  'Dunwich Horror': 'The Dunwich Legacy',
+  
+  // Path to Carcosa variations
+  'Carcosa': 'The Path To Carcosa',
+  'Path to Carcosa': 'The Path To Carcosa',
+  'The Path to Carcosa': 'The Path To Carcosa',
+  'Path To Carcosa': 'The Path To Carcosa',
+  
+  // Forgotten Age variations
+  'Forgotten': 'The Forgotten Age',
+  'Forgotten Age': 'The Forgotten Age',
+  'The Forgotten Age': 'The Forgotten Age',
+  
+  // Circle Undone variations
+  'Circle': 'The Circle Undone',
+  'Circle Undone': 'The Circle Undone',
+  'The Circle Undone': 'The Circle Undone',
+  
+  // Dream Eaters variations
+  'Dream': 'The Dream Eaters',
+  'Dream Eaters': 'The Dream Eaters',
+  'Dream-Eaters': 'The Dream Eaters',
+  'The Dream-Eaters': 'The Dream Eaters',
+  'The Dream Eaters': 'The Dream Eaters',
+  
+  // Innsmouth Conspiracy variations
+  'Innsmouth': 'The Innsmouth Conspiracy',
+  'Innsmouth Conspiracy': 'The Innsmouth Conspiracy',
+  'The Innsmouth Conspiracy': 'The Innsmouth Conspiracy',
+  
+  // Edge of the Earth variations
+  'Edge': 'Edge Of The Earth',
+  'Edge of Earth': 'Edge Of The Earth',
+  'Edge of the Earth': 'Edge Of The Earth',
+  'Edge Of Earth': 'Edge Of The Earth',
+  'Edge Of The Earth': 'Edge Of The Earth',
+  
+  // Scarlet Keys variations
+  'Scarlet': 'The Scarlet Keys',
+  'Scarlet Keys': 'The Scarlet Keys',
+  'The Scarlet Keys': 'The Scarlet Keys',
+  
+  // Feast of Hemlock Vale variations
+  'Hemlock': 'The Feast Of Hemlock Vale',
+  'Hemlock Vale': 'The Feast Of Hemlock Vale',
+  'Feast of Hemlock': 'The Feast Of Hemlock Vale',
+  'Feast of Hemlock Vale': 'The Feast Of Hemlock Vale',
+  'The Feast of Hemlock Vale': 'The Feast Of Hemlock Vale',
+  'The Feast Of Hemlock Vale': 'The Feast Of Hemlock Vale'
+};
+
+export const normalizePackName = (packName: string | undefined): string | undefined => {
+  if (!packName) return undefined;
+  return PACK_NAME_MAP[packName] || packName;
+};
+
 export const fetchCardsByFaction = async (factionCode: string): Promise<ArkhamCard[]> => {
   try {
     console.log(`Fetching cards for faction: ${factionCode}`);
     const allCards = await fetchAllCards();
-    const factionCards = allCards.filter(card => card.faction_code === factionCode);
+    const factionCards = allCards
+      .filter(card => card.faction_code === factionCode)
+      .map(card => ({
+        ...card,
+        pack_name: normalizePackName(card.pack_name)
+      }));
     console.log(`Found ${factionCards.length} cards for faction ${factionCode}`);
     return factionCards;
   } catch (error) {

@@ -8,14 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LoadingSpinner from "./LoadingSpinner";
-import { Home } from "lucide-react";
+import { Home, ArrowLeft } from "lucide-react";
 import { processCardText } from "@/utils/textProcessing";
+import { useExpansions } from "@/contexts/ExpansionContext";
+
 
 const InvestigatorList: React.FC = () => {
   const [investigators, setInvestigators] = useState<ArkhamCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [nameFilter, setNameFilter] = useState<string>("");
+
   const { faction } = useParams<{ faction: string }>();
   const navigate = useNavigate();
 
@@ -59,47 +61,46 @@ const InvestigatorList: React.FC = () => {
     navigate(`/cards/${faction}/${investigator.code}`);
   };
 
-  const handleBack = () => {
+  const handleHome = () => {
     navigate('/');
+  };
+
+  const handleBack = () => {
+    navigate(-1);
   };
 
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="text-center text-red-500 my-8">{error}</div>;
 
+  const { selectedExpansions } = useExpansions();
   const filteredInvestigators = investigators.filter(investigator => {
-    const nameMatch = investigator.name.toLowerCase().includes(nameFilter.toLowerCase());
-    return nameMatch;
+    return selectedExpansions.size === 0 || (investigator.pack_name && selectedExpansions.has(investigator.pack_name));
   });
 
   return (
     <div className="container mx-auto p-4">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <Button onClick={() => navigate('/')} variant="outline" size="icon" title="Home">
-            <Home className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleHome} variant="outline" size="icon" title="Home">
+              <Home className="h-4 w-4" />
+            </Button>
+            <Button onClick={handleBack} variant="outline" size="icon" title="Back">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
           <h2 className="text-3xl font-bold text-arkham-purple">
-            {faction ? `${getFactionName(faction)} Investigators` : "All Investigators"}
+            {faction ? `${getFactionName(faction)} Investigators (${filteredInvestigators.length})` : `All Investigators (${filteredInvestigators.length})`}
           </h2>
           <div className="w-10"></div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="nameFilter">Filter by Name</Label>
-            <Input
-              id="nameFilter"
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
-              placeholder="Search by name..."
-            />
-          </div>
-        </div>
+
 
         {filteredInvestigators.length === 0 ? (
           <p className="text-center">No investigators found matching the current filters.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filteredInvestigators.map((investigator) => (
               <Card key={investigator.code} className="bg-card hover:bg-card/90 transition-colors cursor-pointer" onClick={() => handleInvestigatorClick(investigator)}>
                 <CardContent className="p-4">

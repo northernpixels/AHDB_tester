@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface ExpansionContextType {
   selectedExpansions: Set<string>;
   setSelectedExpansions: (expansions: Set<string>) => void;
+  clearExpansions: () => void;
 }
 
 const ExpansionContext = createContext<ExpansionContextType | undefined>(undefined);
@@ -19,8 +20,12 @@ export const ExpansionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem('selectedExpansions', JSON.stringify(Array.from(selectedExpansions)));
   }, [selectedExpansions]);
 
+  const clearExpansions = () => {
+    setSelectedExpansions(new Set());
+  };
+
   return (
-    <ExpansionContext.Provider value={{ selectedExpansions, setSelectedExpansions }}>
+    <ExpansionContext.Provider value={{ selectedExpansions, setSelectedExpansions, clearExpansions }}>
       {children}
     </ExpansionContext.Provider>
   );

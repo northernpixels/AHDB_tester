@@ -1,101 +1,46 @@
-
 import React, { useEffect, useState } from "react";
 import { useExpansions } from "@/contexts/ExpansionContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArkhamCard } from "@/types/arkham-types";
-import { fetchCardsByFaction, getFactionName, getExpansions, Expansion } from "@/api/arkhamAPI";
-import { Card, CardContent } from "@/components/ui/card";
+import { fetchCardsByFaction, getFactionName } from "@/api/arkhamAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import LoadingSpinner from "./LoadingSpinner";
+import { Home, ArrowLeft } from "lucide-react";
 import { processCardText } from "@/utils/textProcessing";
-import { Home } from "lucide-react";
 
 const CardList: React.FC = () => {
-  const [cards, setCards] = useState<ArkhamCard[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [nameFilter, setNameFilter] = useState<string>("");
-  const { selectedExpansions, setSelectedExpansions } = useExpansions();
-  const [xpFilter, setXpFilter] = useState<string>("");
-  const [expansions, setExpansions] = useState<Expansion[]>([]);
-  console.log('Current expansions state:', expansions);
-  const [loadingExpansions, setLoadingExpansions] = useState<boolean>(true);
-  const [expansionSearch, setExpansionSearch] = useState<string>("");
   const { faction, type } = useParams<{ faction: string; type: string }>();
   const navigate = useNavigate();
+  const { selectedExpansions } = useExpansions();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cards, setCards] = useState<ArkhamCard[]>([]);
+  const [nameFilter, setNameFilter] = useState('');
+  const [xpFilter, setXpFilter] = useState('');
+  const [filteredCards, setFilteredCards] = useState<ArkhamCard[]>([]);
 
-  // Load expansions once on mount
+
+  const handleHome = () => navigate('/');
+  const handleBack = () => navigate(-1);
+
   useEffect(() => {
-    const loadExpansions = async () => {
-      try {
-        setLoadingExpansions(true);
-        const allExpansions = await getExpansions();
-        console.log('Fetched expansions:', allExpansions);
-        console.log('Expansion codes:', allExpansions.map(exp => `${exp.code} -> ${exp.name}`));
-        setExpansions(allExpansions);
-      } catch (err) {
-        console.error('Error loading expansions:', err);
-      } finally {
-        setLoadingExpansions(false);
-      }
-    };
-
-    loadExpansions();
-  }, []); // Empty dependency array means this only runs once on mount
-
-  // Load cards when faction or type changes
-  useEffect(() => {
-    console.log('CardList useEffect - faction:', faction, 'type:', type);
     const loadCards = async () => {
       if (!faction || !type) {
-        console.log('Missing faction or type');
+        setLoading(false);
         return;
       }
-      
+
       try {
         setLoading(true);
-        
-        console.log('Starting data fetch for faction:', faction);
         const allCards = await fetchCardsByFaction(faction);
-        console.log('Fetched cards:', allCards.map(card => ({
-          name: card.name,
-          pack_code: card.pack_code,
-          pack_name: card.pack_name,
-          type_code: card.type_code
-        })));
-        // Debug log for pack codes
-        const uniquePacks = new Set();
-        allCards.forEach(card => {
-          if (card.pack_code) uniquePacks.add(`${card.pack_code} -> ${card.pack_name}`);
-        });
-        console.log('Unique pack codes in cards:', Array.from(uniquePacks));
-        
-        // Filter by type and handle special cases
-        let filteredCards = allCards.filter(card => {
-          // For investigator type, only show investigators
-          if (type === 'investigator') {
-            return card.type_code === 'investigator';
-          }
-          // For other types, show cards of that type for the faction
-          return card.type_code === type;
-        });
-        
-        // Sort by name and XP
-        filteredCards.sort((a, b) => {
-          const nameCompare = a.name.localeCompare(b.name);
-          if (nameCompare !== 0) return nameCompare;
-          return (a.xp || 0) - (b.xp || 0);
-        });
-
-        console.log('Filtered cards:', filteredCards.length);
-        setCards(filteredCards);
+        const typeFilteredCards = allCards.filter(card => card.type_code === type);
+        setCards(typeFilteredCards);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        setError(`Failed to load data: ${errorMessage}`);
-        console.error('Error in CardList:', err);
+        setError('Failed to load cards');
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -104,72 +49,36 @@ const CardList: React.FC = () => {
     loadCards();
   }, [faction, type]);
 
-  const handleHome = () => {
-    navigate('/');
-  };
+  useEffect(() => {
+    let filtered = [...cards];
 
-  console.log('Starting card filtering with:', {
-    totalCards: cards.length,
-    selectedExpansions: Array.from(selectedExpansions),
-    nameFilter,
-    xpFilter
-  });
+    if (selectedExpansions.size > 0) {
+      filtered = filtered.filter(card => 
+        card.pack_name && selectedExpansions.has(card.pack_name)
+      );
+    }
 
-  // Debug the current state
-  console.log('Current filtering state:', {
-    totalCards: cards.length,
-    selectedExpansions: Array.from(selectedExpansions),
-    nameFilter,
-    xpFilter
-  });
-
-  // Sample some cards to debug
-  console.log('Sample of cards:', cards.slice(0, 3).map(card => ({
-    name: card.name,
-    pack_code: card.pack_code,
-    pack_name: card.pack_name,
-    type_code: card.type_code
-  })));
-
-  const filteredCards = cards.filter(card => {
-    const nameMatch = card.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const packMatch = selectedExpansions.size === 0 || (card.pack_code && selectedExpansions.has(card.pack_code));
-    const xpMatch = !xpFilter || (card.xp !== undefined && card.xp.toString() === xpFilter);
-    
-    // Debug each filter condition
-    if (selectedExpansions.size > 0 && !packMatch) {
-      console.log('Card filtered out by pack:', {
-        name: card.name,
-        pack_code: card.pack_code,
-        selectedExpansions: Array.from(selectedExpansions)
+    if (xpFilter) {
+      filtered = filtered.filter(card => {
+        if (xpFilter === '0') return card.xp === 0;
+        if (xpFilter === '1+') return card.xp && card.xp > 0;
+        return true;
       });
     }
 
-    if (card.name === 'Roland Banks') {
-      console.log('Roland Banks found:', {
-        packMatch,
-        nameMatch,
-        xpMatch,
-        cardPack: card.pack_code,
-        cardPackName: card.pack_name,
-        selectedExpansions: Array.from(selectedExpansions)
-      });
+    if (nameFilter) {
+      const searchTerm = nameFilter.toLowerCase();
+      filtered = filtered.filter(card => 
+        card.name.toLowerCase().includes(searchTerm)
+      );
     }
-    
-    return nameMatch && packMatch && xpMatch;
-  });
 
-  console.log('Filtering complete:', {
-    totalCards: cards.length,
-    filteredCards: filteredCards.length
-  });
+    setFilteredCards(filtered);
+  }, [cards, selectedExpansions, xpFilter, nameFilter]);
 
-  if (!faction || !type) {
-    navigate('/');
-    return null;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div className="text-center text-red-500 my-8">{error}</div>;
 
-  // Function to get card details display
   const getCardDetails = (card: ArkhamCard) => {
     return (
       <div className="text-sm space-y-2">
@@ -217,78 +126,65 @@ const CardList: React.FC = () => {
         )}
 
         {/* Card Text */}
-        {card.text && <p className="text-sm mt-2">{processCardText(card.text)}</p>}
+        {card.text && (
+          <div className="text-sm mt-2">
+            {processCardText(card.text)
+              .split('[elder sign]')
+              .map((part, i, arr) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <br />}
+                  {part}
+                  {i < arr.length - 1 && '[elder sign]'}
+                </React.Fragment>
+              ))}
+          </div>
+        )}
+
+        {/* Flavor Text */}
+        {card.flavor && (
+          <div className="text-sm mt-2 italic text-gray-600">
+            {card.flavor}
+          </div>
+        )}
+
+        {/* Pack Name */}
+        {card.pack_name && (
+          <div className="text-xs mt-2 text-gray-500">
+            {card.pack_name}
+          </div>
+        )}
       </div>
     );
   };
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="text-center text-red-500 my-8">{error}</div>;
-
   return (
-    <div className="container mx-auto p-4">
+    <div className="flex-1 p-4">
       <div className="space-y-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/cards/${faction}`)}>
-              <Home className="h-5 w-5" />
-            </Button>
-            <h2 className="text-2xl font-bold">
-              {getFactionName(faction)} {type === "investigator" ? "Investigators" : `${type.charAt(0).toUpperCase()}${type.slice(1)}s`}
-            </h2>
+            <div className="flex gap-2">
+              <Button onClick={handleHome} variant="outline" size="icon" title="Home">
+                <Home className="h-4 w-4" />
+              </Button>
+              <Button onClick={handleBack} variant="outline" size="icon" title="Back">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </div>
+
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="nameFilter">Filter by Name</Label>
             <Input
               id="nameFilter"
               value={nameFilter}
               onChange={(e) => setNameFilter(e.target.value)}
-              placeholder="Search by name..."
+              placeholder="Enter card name..."
             />
           </div>
-          <div>
-            <Label>Filter by Expansions</Label>
-            <div className="max-h-96 overflow-y-auto border rounded p-2 space-y-2">
-              <div className="sticky top-0 bg-white dark:bg-gray-900 p-2 -m-2 mb-2 border-b">
-                <input
-                  type="text"
-                  placeholder="Search expansions..."
-                  className="w-full px-2 py-1 text-sm border rounded"
-                  value={expansionSearch}
-                  onChange={(e) => setExpansionSearch(e.target.value)}
-                />
-              </div>
-              {!loadingExpansions && expansions
-                ?.filter(exp => exp.name.toLowerCase().includes(expansionSearch.toLowerCase()))
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((expansion) => (
-                <div key={expansion.code} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`expansion-${expansion.code}`}
-                    checked={selectedExpansions.has(expansion.code)}
-                    onChange={(e) => {
-                      const newSelected = new Set(selectedExpansions);
-                      if (e.target.checked) {
-                        newSelected.add(expansion.code);
-                      } else {
-                        newSelected.delete(expansion.code);
-                      }
-                      setSelectedExpansions(newSelected);
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <label htmlFor={`expansion-${expansion.code}`} className="text-sm hover:text-blue-500 cursor-pointer">
-                    {expansion.name}
-                  </label>
-                </div>
-              ))}
-              {loadingExpansions && <div className="text-sm">Loading expansions...</div>}
-            </div>
-          </div>
+
           <div>
             <Label htmlFor="xpFilter">Filter by XP</Label>
             <Input

@@ -26,6 +26,7 @@ export interface ArkhamCard {
   deck_requirements?: DeckRequirements;
   real_text?: string;
   real_flavor?: string;
+  flavor?: string;
   imagesrc?: string;
   quantity?: number;
   health_per_investigator?: boolean;

@@ -1,27 +1,13 @@
 
 import React from "react";
-import FactionSelector from "@/components/FactionSelector";
+import CardTypeList from "@/components/CardTypeList";
 
 const Index: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-arkham-black p-6">
-        <div className="container mx-auto">
-          <h1 className="text-4xl font-bold text-arkham-purple">Arkham Horror Deck Builder</h1>
-          <p className="text-lg text-gray-300 mt-2">Create custom investigator decks for your next investigation</p>
-        </div>
-      </header>
-
-      <main className="flex-grow py-8">
-        <FactionSelector />
-      </main>
-
-      <footer className="bg-arkham-black p-4 mt-12 text-center text-gray-400">
-        <div className="container mx-auto">
-          <p>Arkham Horror Deck Builder - Using data from ArkhamDB</p>
-          <p className="text-xs mt-2">This application is not affiliated with Fantasy Flight Games or ArkhamDB.</p>
-        </div>
-      </footer>
+    <div className="flex-1">
+      <div className="container mx-auto p-4">
+        <p className="text-center text-gray-600 mb-4">Select a faction and card type above to browse cards</p>
+      </div>
     </div>
   );
 };

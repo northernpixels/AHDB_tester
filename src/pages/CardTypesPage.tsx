@@ -1,28 +1,19 @@
 
 import React from "react";
-import CardTypeList from "@/components/CardTypeList";
+import { useNavigate, useParams } from "react-router-dom";
 
 const CardTypesPage: React.FC = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-arkham-black p-6">
-        <div className="container mx-auto">
-          <h1 className="text-4xl font-bold text-arkham-purple">Arkham Horror Deck Builder</h1>
-          <p className="text-lg text-gray-300 mt-2">Browse cards by type</p>
-        </div>
-      </header>
+  const navigate = useNavigate();
+  const { faction } = useParams<{ faction: string }>();
 
-      <main className="flex-grow py-8">
-        <CardTypeList />
-      </main>
+  // Redirect to investigator type by default
+  React.useEffect(() => {
+    if (faction) {
+      navigate(`/cards/${faction}/investigator`);
+    }
+  }, [faction, navigate]);
 
-      <footer className="bg-arkham-black p-4 mt-12 text-center text-gray-400">
-        <div className="container mx-auto">
-          <p>Arkham Horror Deck Builder - Using data from ArkhamDB</p>
-        </div>
-      </footer>
-    </div>
-  );
+  return null;
 };
 
 export default CardTypesPage;
