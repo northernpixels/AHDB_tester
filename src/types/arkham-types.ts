@@ -2,6 +2,7 @@
 export interface ArkhamCard {
   code: string;
   name: string;
+  subname?: string;
   text?: string;
   faction_code: string;
   faction_name?: string;

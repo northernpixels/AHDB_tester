@@ -1,11 +1,11 @@
-
 import React from "react";
 import CardList from "@/components/CardList";
+import CardTypeList from "@/components/CardTypeList";
 
 const CardsPage: React.FC = () => {
-  console.log('CardsPage rendering');
   return (
     <div className="flex-1">
+      <CardTypeList />
       <CardList />
     </div>
   );

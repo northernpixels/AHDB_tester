@@ -37,7 +37,7 @@ const FactionSelector: React.FC = () => {
 
   const handleSelectFaction = (faction: string) => {
     setSelectedFaction(faction);
-    navigate(`/cards/${faction}/investigator`);
+    navigate(`/cards/${faction}`);
   };
   
   return (

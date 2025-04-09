@@ -88,6 +88,8 @@ const PACK_NAME_MAP: { [key: string]: string } = {
   'Scarlet': 'The Scarlet Keys',
   'Scarlet Keys': 'The Scarlet Keys',
   'The Scarlet Keys': 'The Scarlet Keys',
+  'The Scarlet Keys Campaign Expansion': 'The Scarlet Keys',
+  'The Scarlet Keys Investigator Expansion': 'The Scarlet Keys',
   
   // Feast of Hemlock Vale variations
   'Hemlock': 'The Feast Of Hemlock Vale',
@@ -95,7 +97,9 @@ const PACK_NAME_MAP: { [key: string]: string } = {
   'Feast of Hemlock': 'The Feast Of Hemlock Vale',
   'Feast of Hemlock Vale': 'The Feast Of Hemlock Vale',
   'The Feast of Hemlock Vale': 'The Feast Of Hemlock Vale',
-  'The Feast Of Hemlock Vale': 'The Feast Of Hemlock Vale'
+  'The Feast Of Hemlock Vale': 'The Feast Of Hemlock Vale',
+  'The Feast of Hemlock Vale Campaign Expansion': 'The Feast Of Hemlock Vale',
+  'The Feast of Hemlock Vale Investigator Expansion': 'The Feast Of Hemlock Vale'
 };
 
 export const normalizePackName = (packName: string | undefined): string | undefined => {
@@ -103,16 +107,34 @@ export const normalizePackName = (packName: string | undefined): string | undefi
   return PACK_NAME_MAP[packName] || packName;
 };
 
-export const fetchCardsByFaction = async (factionCode: string): Promise<ArkhamCard[]> => {
+export const fetchCardsByFaction = async (factionCode: string, typeFilter?: { type?: string; subtype?: string }): Promise<ArkhamCard[]> => {
   try {
     console.log(`Fetching cards for faction: ${factionCode}`);
     const allCards = await fetchAllCards();
-    const factionCards = allCards
+    let factionCards = allCards
       .filter(card => card.faction_code === factionCode)
       .map(card => ({
         ...card,
         pack_name: normalizePackName(card.pack_name)
       }));
+
+    // For neutral faction, exclude Location, Enemy, and Story cards
+    if (factionCode === 'neutral') {
+      factionCards = factionCards.filter(card => 
+        !['location', 'enemy', 'story'].includes(card.type_code.toLowerCase())
+      );
+    }
+
+    // Apply type and subtype filters if provided
+    if (typeFilter) {
+      if (typeFilter.type) {
+        factionCards = factionCards.filter(card => card.type_code === typeFilter.type);
+      }
+      if (typeFilter.subtype) {
+        factionCards = factionCards.filter(card => card.traits?.toLowerCase().includes(typeFilter.subtype.toLowerCase()));
+      }
+    }
+
     console.log(`Found ${factionCards.length} cards for faction ${factionCode}`);
     return factionCards;
   } catch (error) {
@@ -224,17 +246,19 @@ export const getFactionName = (factionCode: string): string => {
 };
 
 export const getTypeIcon = (typeCode: string): string => {
-  // Usually you would have icons for these, but we'll return placeholder strings
-  const typeMap: Record<string, string> = {
-    asset: "🧰", // Asset
-    event: "⚡", // Event
-    skill: "🧠", // Skill
-    treachery: "☠️", // Treachery
-    enemy: "👹", // Enemy
-    investigator: "🕵️", // Investigator
+  const iconMap: Record<string, string> = {
+    asset: "💠",
+    event: "⚡",
+    skill: "✨",
+    treachery: "☠️",
+    enemy: "👿",
+    investigator: "🔍",
+    location: "🏛️",
+    story: "📖",
+    basic_weakness: "💀",
+    weakness: "☠️"
   };
-
-  return typeMap[typeCode] || "📝";
+  return iconMap[typeCode] || "❓";
 };
 
 export const getFactionColor = (factionCode: string): string => {

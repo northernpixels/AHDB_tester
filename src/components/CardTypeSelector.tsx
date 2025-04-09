@@ -24,13 +24,35 @@ const CardTypeSelector: React.FC = () => {
         setLoading(true);
         const cards = await fetchCardsByFaction(faction);
         
-        // Group cards by type_code
+        // Group cards by type_code and handle special subtypes
         const groupedCards: Record<string, ArkhamCard[]> = {};
         cards.forEach(card => {
-          if (!groupedCards[card.type_code]) {
-            groupedCards[card.type_code] = [];
+          // Special handling for Basic Weakness and Weakness subtypes
+          if (card.type_code === 'treachery') {
+            const traits = card.traits?.toLowerCase() || '';
+            if (traits.includes('basic weakness')) {
+              if (!groupedCards['basic_weakness']) {
+                groupedCards['basic_weakness'] = [];
+              }
+              groupedCards['basic_weakness'].push(card);
+            } else if (traits.includes('weakness')) {
+              if (!groupedCards['weakness']) {
+                groupedCards['weakness'] = [];
+              }
+              groupedCards['weakness'].push(card);
+            } else {
+              // Handle regular treachery cards
+              if (!groupedCards['treachery']) {
+                groupedCards['treachery'] = [];
+              }
+              groupedCards['treachery'].push(card);
+            }
+          } else {
+            if (!groupedCards[card.type_code]) {
+              groupedCards[card.type_code] = [];
+            }
+            groupedCards[card.type_code].push(card);
           }
-          groupedCards[card.type_code].push(card);
         });
         
         // Convert to array format
@@ -38,7 +60,9 @@ const CardTypeSelector: React.FC = () => {
           const firstCard = groupedCards[typeCode][0];
           return {
             type_code: typeCode,
-            type_name: firstCard.type_name || typeCode,
+            type_name: typeCode === 'basic_weakness' ? 'Basic Weakness' :
+                      typeCode === 'weakness' ? 'Weakness' :
+                      firstCard.type_name || typeCode,
             cards: groupedCards[typeCode]
           };
         });
