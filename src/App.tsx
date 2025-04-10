@@ -39,7 +39,7 @@ const App = () => {
               <div className="bg-arkham-black p-6 space-y-6">
                 <div className="container mx-auto space-y-6">
                   <div className="text-center">
-                    <h1 className="text-4xl font-bold text-arkham-purple">Arkham Horror Deck Builder</h1>
+                    <h1 className="text-4xl font-bold text-arkham-purple">Eldersign Deck Builder</h1>
                     <p className="text-lg text-gray-300 mt-2">Create custom investigator decks for your next investigation</p>
                   </div>
                   <ExpansionSelector />
