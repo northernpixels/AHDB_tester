@@ -14,8 +14,13 @@ import { processCardText } from "@/utils/textProcessing";
 import { findImagesForTerms } from "@/utils/imageUtils";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-const CardList: React.FC = () => {
-  const { faction, type } = useParams<{ faction: string; type?: string }>();
+interface CardListProps {
+  faction: string;
+  type?: string;
+  onCardClick?: (card: ArkhamCard) => void;
+}
+
+const CardList: React.FC<CardListProps> = ({ faction, type, onCardClick }) => {
   const navigate = useNavigate();
   const { selectedExpansions } = useExpansions();
   const [loading, setLoading] = useState(true);
@@ -27,7 +32,6 @@ const CardList: React.FC = () => {
   const [filteredCards, setFilteredCards] = useState<ArkhamCard[]>([]);
   const [hasXpCards, setHasXpCards] = useState(false);
   const [cardImages, setCardImages] = useState<Record<string, { term: string; url?: string }[]>>({});
-
 
   const handleHome = () => navigate('/');
   const handleBack = () => navigate(-1);
@@ -217,7 +221,10 @@ const CardList: React.FC = () => {
           const cardId = card.code;
           
           return (
-            <div className="text-sm mt-2">
+            <div 
+              className="text-sm mt-2 cursor-pointer hover:bg-accent p-2 rounded-md transition-colors"
+              onClick={() => onCardClick?.(card)}
+            >
               <span 
                 dangerouslySetInnerHTML={{ 
                   __html: processed.text.replace(/\*_([^*]+)_\*/g, '<strong><em>$1</em></strong>')
