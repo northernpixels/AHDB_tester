@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useExpansions } from '@/contexts/ExpansionContext';
+import { useFilters } from '@/contexts/FilterContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { X } from 'lucide-react';
@@ -34,7 +35,8 @@ const OTHER_PACKS = [
 ];
 
 const ExpansionSelector: React.FC = () => {
-  const { selectedExpansions, setSelectedExpansions, clearExpansions } = useExpansions();
+  const { selectedExpansions, setSelectedExpansions } = useExpansions();
+  const { clearAllFilters } = useFilters();
   const [showOtherPacks, setShowOtherPacks] = useState(false);
 
   const toggleExpansion = (expansion: string) => {
@@ -54,15 +56,21 @@ const ExpansionSelector: React.FC = () => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>Filter by Box Expansions</Label>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={clearExpansions}
-            title="Clear expansions"
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Clear all selections</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setSelectedExpansions(new Set());
+                clearAllFilters();
+              }}
+              title="Clear expansions"
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {BOX_EXPANSIONS.map((expansion) => (

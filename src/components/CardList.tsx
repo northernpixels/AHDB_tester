@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useFilters } from "@/contexts/FilterContext";
 import { useExpansions } from "@/contexts/ExpansionContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArkhamCard } from "@/types/arkham-types";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import LoadingSpinner from "./LoadingSpinner";
-import { Home, ArrowLeft } from "lucide-react";
+import { Home, ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { processCardText } from "@/utils/textProcessing";
 
 const CardList: React.FC = () => {
@@ -19,7 +20,8 @@ const CardList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [cards, setCards] = useState<ArkhamCard[]>([]);
   const [nameFilter, setNameFilter] = useState('');
-  const [xpFilter, setXpFilter] = useState('0');
+  const { xpFilter, setXpFilter } = useFilters();
+  const xpOptions = Array.from({ length: 6 }, (_, i) => i.toString());
   const [filteredCards, setFilteredCards] = useState<ArkhamCard[]>([]);
   const [hasXpCards, setHasXpCards] = useState(false);
 
@@ -251,8 +253,8 @@ const CardList: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className={`${hasXpCards ? 'col-span-1' : 'col-span-full'}`}>
+        <div className="flex flex-wrap gap-4">
+          <div className="flex-1 min-w-[200px]">
             <Label htmlFor="nameFilter">Filter by Name</Label>
             <Input
               id="nameFilter"
@@ -262,43 +264,38 @@ const CardList: React.FC = () => {
             />
           </div>
 
+          {/* XP Filter */}
           {hasXpCards && type !== 'investigator' && (
-            <div>
+            <div className="w-auto">
               <Label htmlFor="xpFilter">Filter by XP</Label>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
+              <div className="flex items-center gap-1 mt-[2px]">
+                <Button
+                  variant="outline"
                   size="icon"
                   onClick={() => {
                     const currentXp = parseInt(xpFilter);
-                    const newXp = currentXp <= 0 ? 5 : currentXp - 1;
+                    const newXp = currentXp < 5 ? currentXp + 1 : 5;
                     setXpFilter(newXp.toString());
                   }}
+                  disabled={parseInt(xpFilter) >= 5}
+                  className="h-8 w-8"
                 >
-                  <span className="text-lg">-</span>
+                  <ChevronUp className="h-4 w-4" />
                 </Button>
-                <div className="w-12 text-center font-bold">{xpFilter}</div>
-                <Button 
-                  variant="outline" 
+                <div className="w-8 text-center font-semibold">{xpFilter}</div>
+                <Button
+                  variant="outline"
                   size="icon"
                   onClick={() => {
                     const currentXp = parseInt(xpFilter);
-                    const newXp = currentXp >= 5 ? 0 : currentXp + 1;
+                    const newXp = currentXp > 0 ? currentXp - 1 : 0;
                     setXpFilter(newXp.toString());
                   }}
+                  disabled={parseInt(xpFilter) <= 0}
+                  className="h-8 w-8"
                 >
-                  <span className="text-lg">+</span>
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
-                {xpFilter !== '' && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => setXpFilter('')}
-                    title="Clear XP filter"
-                  >
-                    <span className="text-lg">×</span>
-                  </Button>
-                )}
               </div>
             </div>
           )}

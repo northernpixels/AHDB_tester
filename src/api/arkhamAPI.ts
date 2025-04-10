@@ -48,22 +48,32 @@ const PACK_NAME_MAP: { [key: string]: string } = {
   'Dunwich Legacy': 'The Dunwich Legacy',
   'The Dunwich Legacy': 'The Dunwich Legacy',
   'Dunwich Horror': 'The Dunwich Legacy',
+  'Return to the Dunwich Legacy': 'Return to The Dunwich Legacy',
+  'Return to Dunwich Legacy': 'Return to The Dunwich Legacy',
+  'Return To The Dunwich Legacy': 'Return to The Dunwich Legacy',
   
   // Path to Carcosa variations
   'Carcosa': 'The Path To Carcosa',
   'Path to Carcosa': 'The Path To Carcosa',
   'The Path to Carcosa': 'The Path To Carcosa',
   'Path To Carcosa': 'The Path To Carcosa',
+  'Return to the Path to Carcosa': 'Return to The Path to Carcosa',
+  'Return to Path to Carcosa': 'Return to The Path to Carcosa',
+  'Return To The Path to Carcosa': 'Return to The Path to Carcosa',
   
   // Forgotten Age variations
   'Forgotten': 'The Forgotten Age',
   'Forgotten Age': 'The Forgotten Age',
   'The Forgotten Age': 'The Forgotten Age',
+  'Return to the Forgotten Age': 'Return to The Forgotten Age',
+  'Return To The Forgotten Age': 'Return to The Forgotten Age',
   
   // Circle Undone variations
   'Circle': 'The Circle Undone',
   'Circle Undone': 'The Circle Undone',
   'The Circle Undone': 'The Circle Undone',
+  'Return to the Circle Undone': 'Return to The Circle Undone',
+  'Return To The Circle Undone': 'Return to The Circle Undone',
   
   // Dream Eaters variations
   'Dream': 'The Dream Eaters',
@@ -99,6 +109,14 @@ const PACK_NAME_MAP: { [key: string]: string } = {
   'The Feast of Hemlock Vale': 'The Feast Of Hemlock Vale',
   'The Feast Of Hemlock Vale': 'The Feast Of Hemlock Vale',
   'The Feast of Hemlock Vale Campaign Expansion': 'The Feast Of Hemlock Vale',
+  
+  // Other packs
+  'Return to Night of the Zealot': 'Return to Night of the Zealot',
+  'The Blob That Ate Everything': 'The Blob That Ate Everything',
+  'Murder at the Excelsior Hotel': 'Murder at the Excelsior Hotel',
+  'War of the Outer Gods': 'War of the Outer Gods',
+  'Machinations Through Time': 'Machinations Through Time',
+  'Fortune and Folly': 'Fortune and Folly',
   'The Feast of Hemlock Vale Investigator Expansion': 'The Feast Of Hemlock Vale'
 };
 

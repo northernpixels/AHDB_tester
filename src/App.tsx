@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ExpansionProvider } from "./contexts/ExpansionContext";
+import { FilterProvider } from "./contexts/FilterContext";
 
 import ExpansionSelector from "./components/ExpansionSelector";
 import FactionSelector from "./components/FactionSelector";
@@ -29,10 +30,11 @@ const App = () => {
   return (
   <QueryClientProvider client={queryClient}>
     <ExpansionProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <HashRouter>
+      <HashRouter>
+        <FilterProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <div className="flex flex-col min-h-screen">
               <div className="bg-arkham-black p-6 space-y-6">
                 <div className="container mx-auto space-y-6">
@@ -54,8 +56,9 @@ const App = () => {
                 </Routes>
               </main>
             </div>
-          </HashRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </FilterProvider>
+      </HashRouter>
     </ExpansionProvider>
   </QueryClientProvider>
   );
