@@ -11,6 +11,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import LoadingSpinner from "./LoadingSpinner";
 import { Home, ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { processCardText } from "@/utils/textProcessing";
+import { findImagesForTerms } from "@/utils/imageUtils";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 const CardList: React.FC = () => {
   const { faction, type } = useParams<{ faction: string; type?: string }>();
@@ -24,6 +26,7 @@ const CardList: React.FC = () => {
   const xpOptions = Array.from({ length: 6 }, (_, i) => i.toString());
   const [filteredCards, setFilteredCards] = useState<ArkhamCard[]>([]);
   const [hasXpCards, setHasXpCards] = useState(false);
+  const [cardImages, setCardImages] = useState<Record<string, { term: string; url?: string }[]>>({});
 
 
   const handleHome = () => navigate('/');
@@ -32,83 +35,36 @@ const CardList: React.FC = () => {
   useEffect(() => {
     const loadCards = async () => {
       if (!faction) {
+        setCards([]);
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        console.log('Loading cards for faction:', faction, 'type:', type);
-        const allCards = await fetchCardsByFaction(faction);
-        console.log('Total cards:', allCards.length);
-        
-        // Log any duplicate cards
-        const cardsByName = new Map<string, ArkhamCard[]>();
-        allCards.forEach(card => {
-          if (!cardsByName.has(card.name)) {
-            cardsByName.set(card.name, []);
-          }
-          cardsByName.get(card.name)!.push(card);
-        });
-        
-        // Check for duplicates
-        cardsByName.forEach((cards, name) => {
-          if (cards.length > 1) {
-            console.log('Duplicate found:', name);
-            cards.forEach(card => {
-              console.log('- Code:', card.code, 'Pack:', card.pack_name, 'XP:', card.xp);
+        const fetchedCards = await fetchCardsByFaction(faction);
+        if (fetchedCards) {
+          // Filter by type if specified
+          if (type) {
+            const typeFiltered = fetchedCards.filter(card => {
+              if (type === 'investigator') {
+                return card.type_code === 'investigator';
+              } else {
+                return card.type_code !== 'investigator';
+              }
             });
+            setCards(typeFiltered);
+          } else {
+            setCards(fetchedCards);
           }
-        });
-
-        // Filter out duplicates - keep only one version of each card
-        // For investigators, only check name. For other cards, check name and XP
-        const uniqueCards = allCards.filter((card, index, self) => 
-          index === self.findIndex(c => {
-            if (card.type_code === 'investigator') {
-              return c.name === card.name;
-            } else {
-              return c.name === card.name && (c.xp ?? 0) === (card.xp ?? 0);
-            }
-          })
-        );
-        console.log('After removing duplicates:', uniqueCards.length);
-        
-        // Filter by type if specified
-        const typeFilteredCards = type
-          ? uniqueCards.filter(card => {
-              console.log('Card type:', card.type_code, 'Looking for:', type);
-              return card.type_code === type;
-            })
-          : uniqueCards;
-        console.log('Filtered cards:', typeFilteredCards.length);
-
-        // Sort cards by name (ignoring 'The' and special characters) and XP
-        const sortedCards = typeFilteredCards.sort((a, b) => {
-          // Clean names for comparison: remove 'The' prefix and special characters
-          const cleanName = (name: string) => {
-            return name
-              .replace(/^The /, '') // Remove 'The ' prefix
-              .replace(/[^a-zA-Z0-9 ]/g, '') // Remove special characters
-              .toLowerCase();
-          };
-          
-          const nameA = cleanName(a.name);
-          const nameB = cleanName(b.name);
-          
-          if (nameA === nameB) {
-            // If names are the same, sort by XP (default to 0)
-            return (a.xp ?? 0) - (b.xp ?? 0);
-          }
-          return nameA.localeCompare(nameB);
-        });
-        // Check if any cards have XP values
-        const hasCardsWithXp = sortedCards.some(card => card.xp !== undefined && card.xp > 0);
-        setHasXpCards(hasCardsWithXp);
-        setCards(sortedCards);
+          setError(null);
+        } else {
+          setCards([]);
+          setError('No cards found');
+        }
       } catch (err) {
-        setError('Failed to load cards');
-        console.error(err);
+        setCards([]);
+        setError(err instanceof Error ? err.message : 'Failed to load cards');
       } finally {
         setLoading(false);
       }
@@ -117,23 +73,34 @@ const CardList: React.FC = () => {
     loadCards();
   }, [faction, type]);
 
-  useEffect(() => {
-    if (!faction) return;
+  // Helper function to normalize card names for sorting
+  const normalizeCardName = (name: string) => {
+    return name
+      .replace(/^The\s+/i, '') // Remove 'The ' from the start (case insensitive)
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+      .toLowerCase();
+  };
 
-    let filtered = [...cards];
+  useEffect(() => {
+    if (!faction || cards.length === 0) {
+      setFilteredCards([]);
+      return;
+    }
+
+    let filtered = [...cards].sort((a, b) => {
+      const nameA = normalizeCardName(a.name);
+      const nameB = normalizeCardName(b.name);
+      
+      if (nameA === nameB) {
+        // If names are the same after normalization, sort by XP
+        return (a.xp ?? 0) - (b.xp ?? 0);
+      }
+      return nameA.localeCompare(nameB);
+    });
 
     // Filter by selected expansions
     if (selectedExpansions.size > 0) {
-      console.log('Selected expansions:', Array.from(selectedExpansions));
-      filtered = filtered.filter(card => {
-        const normalizedPackName = card.pack_name;
-        console.log(`Card: ${card.name}, Pack: ${card.pack_name}`);
-        const isIncluded = normalizedPackName && selectedExpansions.has(normalizedPackName);
-        if (isIncluded) {
-          console.log(`Including ${card.name} from ${normalizedPackName}`);
-        }
-        return isIncluded;
-      });
+      filtered = filtered.filter(card => selectedExpansions.has(card.pack_code));
     }
 
     // Filter by name
@@ -144,6 +111,10 @@ const CardList: React.FC = () => {
       );
     }
 
+    // Check if there are any cards with XP
+    const hasXP = filtered.some(card => (card.xp ?? 0) > 0);
+    setHasXpCards(hasXP);
+
     // Filter by XP
     if (xpFilter && type !== 'investigator') { // Don't apply XP filter to investigators
       const xp = parseInt(xpFilter);
@@ -153,7 +124,35 @@ const CardList: React.FC = () => {
     }
 
     setFilteredCards(filtered);
-  }, [cards, nameFilter, xpFilter, selectedExpansions, faction]);
+  }, [cards, nameFilter, xpFilter, selectedExpansions, type, faction]);
+
+  useEffect(() => {
+    if (loading || filteredCards.length === 0) return;
+
+    const loadImages = async () => {
+      const newImages: Record<string, { term: string; url?: string }[]> = {};
+      let hasNewImages = false;
+
+      for (const card of filteredCards) {
+        if (card.text && !cardImages[card.code]) {
+          const processed = processCardText(card.text);
+          if (processed.specialTerms.length > 0) {
+            const images = await findImagesForTerms(processed.specialTerms, cards);
+            if (images.length > 0) {
+              newImages[card.code] = images;
+              hasNewImages = true;
+            }
+          }
+        }
+      }
+
+      if (hasNewImages) {
+        setCardImages(prev => ({ ...prev, ...newImages }));
+      }
+    };
+
+    loadImages();
+  }, [filteredCards, cards, loading, cardImages]);
 
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="text-center text-red-500 my-8">{error}</div>;
@@ -161,6 +160,14 @@ const CardList: React.FC = () => {
   const getCardDetails = (card: ArkhamCard) => {
     return (
       <div className="text-sm space-y-2">
+        {/* Cost */}
+        {card.cost !== undefined && (
+          <div>
+            <span className="font-semibold">Cost: </span>
+            <span>{card.cost}</span>
+          </div>
+        )}
+
         {/* Skills List */}
         {(card.skill_willpower !== undefined ||
           card.skill_intellect !== undefined ||
@@ -205,19 +212,20 @@ const CardList: React.FC = () => {
         )}
 
         {/* Card Text */}
-        {card.text && (
-          <div className="text-sm mt-2">
-            {processCardText(card.text)
-              .split('[elder sign]')
-              .map((part, i, arr) => (
-                <React.Fragment key={i}>
-                  {i > 0 && <br />}
-                  {part}
-                  {i < arr.length - 1 && '[elder sign]'}
-                </React.Fragment>
-              ))}
-          </div>
-        )}
+        {card.text && (() => {
+          const processed = processCardText(card.text);
+          const cardId = card.code;
+          
+          return (
+            <div className="text-sm mt-2">
+              <span 
+                dangerouslySetInnerHTML={{ 
+                  __html: processed.text.replace(/\*_([^*]+)_\*/g, '<strong><em>$1</em></strong>')
+                }} 
+              />
+            </div>
+          );
+        })()}
 
         {/* Flavor Text */}
         {card.flavor && (
@@ -331,16 +339,13 @@ const CardList: React.FC = () => {
                           )}
                         </div>
                         <div className="flex gap-2">
-                          {card.cost !== undefined && (
-                            <span className="bg-arkham-purple/10 px-2 py-1 rounded text-sm">💰 {card.cost}</span>
-                          )}
                           {card.xp !== undefined && (
-                            <span className="bg-arkham-purple/10 px-2 py-1 rounded text-sm">⭐ {card.xp}</span>
+                            <span className="bg-arkham-purple/10 px-2 py-1 rounded text-sm">{card.xp} XP</span>
                           )}
                         </div>
                       </div>
                       {card.traits && (
-                        <p className="text-sm text-gray-600 mb-2">{processCardText(card.traits)}</p>
+                        <p className="text-sm text-gray-600 mb-2">{processCardText(card.traits).text}</p>
                       )}
                       {getCardDetails(card)}
                     </div>
