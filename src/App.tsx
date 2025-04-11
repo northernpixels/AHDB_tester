@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ExpansionProvider } from "./contexts/ExpansionContext";
 import { FilterProvider } from "./contexts/FilterContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 import ExpansionSelector from "./components/ExpansionSelector";
 import FactionSelector from "./components/FactionSelector";
@@ -14,6 +15,7 @@ import Index from "./pages/Index";
 import InvestigatorsPage from "./pages/InvestigatorsPage";
 import CardTypesPage from "./pages/CardTypesPage";
 import CardsPage from "./pages/CardsPage";
+import DeckBuilderPage from "./pages/DeckBuilderPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -31,7 +33,8 @@ const App = () => {
   <QueryClientProvider client={queryClient}>
     <ExpansionProvider>
       <HashRouter>
-        <FilterProvider>
+        <AuthProvider>
+          <FilterProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -52,12 +55,14 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/cards/:faction" element={<CardsPage />} />
                   <Route path="/cards/:faction/:type" element={<CardsPage />} />
+                  <Route path="/deck/:deckId" element={<DeckBuilderPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
             </div>
           </TooltipProvider>
-        </FilterProvider>
+          </FilterProvider>
+        </AuthProvider>
       </HashRouter>
     </ExpansionProvider>
   </QueryClientProvider>
