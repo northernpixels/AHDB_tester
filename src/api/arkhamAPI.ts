@@ -36,6 +36,24 @@ export const fetchInvestigators = async (): Promise<ArkhamCard[]> => {
   }
 };
 
+// Map ArkhamDB pack codes to our expansion names
+const PACK_CODE_MAP: { [key: string]: string[] } = {
+  'Revised Core Set': ['core', 'core2'],
+  'The Dunwich Legacy': ['dwl', 'tmm', 'tece', 'bota', 'uau', 'wda', 'litas'],
+  'Return to The Dunwich Legacy': ['rtdwl'],
+  'The Path To Carcosa': ['ptc', 'eotp', 'tuo', 'apot', 'tpm', 'bsr', 'dca'],
+  'Return to The Path to Carcosa': ['rtptc'],
+  'The Forgotten Age': ['tfa', 'tof', 'tbb', 'hote', 'tcoa', 'tdoy', 'sha'],
+  'Return to The Forgotten Age': ['rtfa'],
+  'The Circle Undone': ['tcu', 'tsn', 'wos', 'fgg', 'uad', 'icc', 'bbt'],
+  'Return to The Circle Undone': ['rtcu'],
+  'The Dream Eaters': ['tde', 'sfk', 'tsh', 'wgd', 'woc', 'pnr', 'wos'],
+  'The Innsmouth Conspiracy': ['tic', 'itd', 'def', 'hoth', 'lif', 'litas', 'itm'],
+  'Edge Of The Earth': ['eoe', 'eoep'],
+  'The Scarlet Keys': ['tsk'],
+  'The Feast Of Hemlock Vale': ['fhv']
+};
+
 // Map ArkhamDB pack names to our expansion names
 const PACK_NAME_MAP: { [key: string]: string } = {
   // Core Set variations
@@ -123,6 +141,10 @@ const PACK_NAME_MAP: { [key: string]: string } = {
 export const normalizePackName = (packName: string | undefined): string | undefined => {
   if (!packName) return undefined;
   return PACK_NAME_MAP[packName] || packName;
+};
+
+export const getPackCodes = (expansionName: string): string[] => {
+  return PACK_CODE_MAP[expansionName] || [];
 };
 
 export const fetchCardsByFaction = async (factionCode: string, typeFilter?: { type?: string; subtype?: string }): Promise<ArkhamCard[]> => {

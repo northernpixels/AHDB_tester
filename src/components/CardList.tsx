@@ -3,7 +3,7 @@ import { useFilters } from "@/contexts/FilterContext";
 import { useExpansions } from "@/contexts/ExpansionContext";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArkhamCard } from "@/types/arkham-types";
-import { fetchCardsByFaction, getFactionName } from "@/api/arkhamAPI";
+import { fetchCardsByFaction, getFactionName, getPackCodes } from "@/api/arkhamAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,7 +104,10 @@ const CardList: React.FC<CardListProps> = ({ faction, type, onCardClick }) => {
 
     // Filter by selected expansions
     if (selectedExpansions.size > 0) {
-      filtered = filtered.filter(card => selectedExpansions.has(card.pack_code));
+      const validPackCodes = new Set(
+        Array.from(selectedExpansions).flatMap(expansion => getPackCodes(expansion))
+      );
+      filtered = filtered.filter(card => validPackCodes.has(card.pack_code));
     }
 
     // Filter by name
